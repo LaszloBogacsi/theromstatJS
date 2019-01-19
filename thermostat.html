@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Thermostat
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<style>
+    .tempWindow {
+        display: inline-block;
+        width: 250px;
+        height: 100%;
+        border-top: 6px solid;
+        border-top-left-radius: 200px;
+        border-top-right-radius: 200px;
+        text-align: center;
+        font-size: 60px;
+        font-family: Menlo, sans-serif;
+        font-weight: 800;
+        align-content: center;
+        line-height: 240px;
+    }
+
+    span {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: normal;
+    }
+
+    .wrapper {
+        margin: auto;
+        position: relative;
+        height: 240px;
+        width: 440px;
+        border: 1px solid #a8a8a8;
+        border-radius: 10px;
+        background-color: #e9e9e9;
+        padding: 30px;
+        box-shadow: 5px 5px 10px #cbcbcb;
+    }
+
+    .buttons {
+        margin: 10px;
+        float: right;
+        width: 90px;
+        height: 100%;
+    }
+
+    button {
+        width: 100%;
+        height: 30%;
+        background-color: #f8ffff;
+        border-radius: 5px;
+        border: 1px solid lightgrey;
+        font-size: large;
+    }
+
+    button:hover {
+        background-color: rgb(233, 240, 240);
+    }
+
+    button:active {
+        background-color: rgb(217, 224, 224);
+
+    }
+
+    button:focus {
+        outline: 0;
+    }
+
+    body {
+        text-align: center;
+    }
+
+    .thermostat-body {
+        height: 100%;
+    }
+
+    #world-temp {
+        padding-left: 10px;
+    }
+
+</style>
+<h2>My Amazing Thermostat</h2>
+<div class="wrapper">
+    <div class="thermostat-body">
+        <div class="tempWindow">
+            <span id="temp">20</span>
+        </div>
+        <div class="buttons">
+            <button id="btn-up">+</button>
+            <button id="btn-down">-</button>
+            <button id="btn-reset">Reset</button>
+
+        </div>
+        <div>
+            <select>
+                <option value="budapest">Budapest</option>
+                <option selected value="london">London</option>
+                <option value="los-angeles">Los Angeles</option>
+            </select>
+            <span id="world-temp"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    var currentTemperatureElement = document.getElementById("temp");
+    var tempWindow = document.getElementsByClassName("tempWindow").item(0);
+    var buttonUp = document.getElementById("btn-up");
+    var buttonDown = document.getElementById("btn-down");
+    var buttonReset = document.getElementById("btn-reset");
+    var defaultTemp = 20;
+    setTempColor(defaultTemp);
+
+    buttonUp.addEventListener("click", () => {
+        var currentTemp = Number(currentTemperatureElement.innerText);
+        var newTemp = Math.min(32, currentTemp + 1);
+        currentTemperatureElement.innerHTML = newTemp;
+        setTempColor(newTemp);
+    });
+
+    buttonDown.addEventListener("click", () => {
+        var currentTemp = Number(currentTemperatureElement.innerText);
+        var newTemp = Math.max(10, currentTemp - 1);
+        currentTemperatureElement.innerHTML = newTemp;
+        setTempColor(newTemp);
+    });
+
+    buttonReset.addEventListener("click", () => {
+        currentTemperatureElement.innerHTML = defaultTemp;
+        setTempColor(defaultTemp);
+    });
+
+    function setTempColor(temp) {
+        tempWindow.style.borderTopColor = setTempWindowBorderColor(temp);
+        if (temp > 22) {
+            currentTemperatureElement.style.color = "rgb(255, 100, 70)";
+        } else if (temp < 15) {
+            currentTemperatureElement.style.color = "rgb(100, 90, 200)";
+        } else {
+            currentTemperatureElement.style.color = 'rgb(70, 180, 110)';
+        }
+    }
+
+    function setTempWindowBorderColor(temp) {
+        var maxTemp = 32;
+        var minTemp = 10;
+        var red = 0;
+        if (temp > 20) {
+            red = (temp - 20 / (maxTemp - 20)) * 255;
+        }
+        var green = 0;
+        if (temp > 14 && temp < 26) {
+            green = (1 / (1 + Math.abs(20 - temp))) * 255;
+        }
+        var blue = 0;
+        if (temp < 20) {
+            blue = 255 - (((temp - minTemp) / 10) * 255);
+        }
+        return "rgb(" + red + ", " + green + ", " + blue + ")"
+    }
+
+    // #########   Open Weather Map    ############
+    var apiKey = "3bafb4b11c788cfe0e189d9a3c491db3";
+
+    var cityIds = {
+        budapest: 7284824,
+        london: 2643741,
+        "los-angeles": 5368361
+    };
+
+    var selectElement = document.querySelector("select");
+    var worldTempElement = document.getElementById("world-temp");
+    var defaultCity = selectElement.options[selectElement.selectedIndex].value;
+    var cityId = cityIds[defaultCity];
+
+    selectElement.addEventListener("change", () => {
+        var cityName = selectElement.options[selectElement.selectedIndex].value;
+        cityId = cityIds[cityName];
+        var url = "https://api.openweathermap.org/data/2.5/weather?id=" + cityId + "&units=metric&appid=" + apiKey;
+        fetchTempFromApi(url).then(temp => setTempOnElement(temp));
+    });
+    var url = "https://api.openweathermap.org/data/2.5/weather?id=" + cityId + "&units=metric&appid=" + apiKey;
+
+    fetchTempFromApi(url).then(temp => setTempOnElement(temp));
+
+    function fetchTempFromApi(url) {
+        return fetch(url)
+            .then(response => response.json())
+            .then(json => json.main.temp)
+    }
+
+    function setTempOnElement(temp) {
+        worldTempElement.innerHTML = temp + " C";
+    }
+</script>
+
+</body>
+</html>
